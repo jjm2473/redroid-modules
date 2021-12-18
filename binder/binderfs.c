@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 
-#include <linux/compiler_types.h>
+#include <linux/compiler.h>
 #include <linux/errno.h>
 #include <linux/fs.h>
 #include <linux/fsnotify.h>
@@ -744,6 +744,8 @@ static struct dentry *binderfs_mount(struct file_system_type *fs_type,
 	return mount_nodev(fs_type, flags, data, binderfs_fill_super);
 }
 
+void comp_put_ipc_ns(struct ipc_namespace *ns);
+
 static void binderfs_kill_super(struct super_block *sb)
 {
 	struct binderfs_info *info = sb->s_fs_info;
@@ -751,7 +753,7 @@ static void binderfs_kill_super(struct super_block *sb)
 	kill_litter_super(sb);
 
 	if (info && info->ipc_ns)
-		put_ipc_ns(info->ipc_ns);
+		comp_put_ipc_ns(info->ipc_ns);
 
 	kfree(info);
 }

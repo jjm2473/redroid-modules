@@ -10,13 +10,13 @@
 #include <linux/ipc_namespace.h>
 #include <linux/task_work.h>
 
-typedef void (*zap_page_range_ptr_t)(struct vm_area_struct *, unsigned long, unsigned long);
+typedef void (*zap_page_range_ptr_t)(struct vm_area_struct *, unsigned long, unsigned long, void*);
 static zap_page_range_ptr_t zap_page_range_ptr = NULL;
-void zap_page_range(struct vm_area_struct *vma, unsigned long address, unsigned long size)
+void comp_zap_page_range(struct vm_area_struct *vma, unsigned long address, unsigned long size)
 {
 	if (!zap_page_range_ptr)
 		zap_page_range_ptr = (zap_page_range_ptr_t) kallsyms_lookup_name("zap_page_range");
-	zap_page_range_ptr(vma, address, size);
+	zap_page_range_ptr(vma, address, size, NULL);
 }
 
 typedef int (*can_nice_ptr_t)(const struct task_struct *, const int);
@@ -64,14 +64,21 @@ int security_binder_transfer_file(struct task_struct *from, struct task_struct *
 	return security_binder_transfer_file_ptr(from, to, file);
 }
 
+#if defined(CONFIG_IPC_NS)
 typedef void (*put_ipc_ns_ptr_t)(struct ipc_namespace *ns);
 static put_ipc_ns_ptr_t put_ipc_ns_ptr = NULL;
-void put_ipc_ns(struct ipc_namespace *ns)
+void comp_put_ipc_ns(struct ipc_namespace *ns)
 {
     if (!put_ipc_ns_ptr)
         put_ipc_ns_ptr = (put_ipc_ns_ptr_t) kallsyms_lookup_name("put_ipc_ns");
     put_ipc_ns_ptr(ns);
 }
+#else
+void comp_put_ipc_ns(struct ipc_namespace *ns)
+{
+    put_ipc_ns(ns);
+}
+#endif
 
 // struct ipc_namespace init_ipc_ns;
 typedef struct ipc_namespace *init_ipc_ns_ptr_t;

@@ -897,6 +897,8 @@ void binder_alloc_vma_close(struct binder_alloc *alloc)
 	binder_alloc_set_vma(alloc, NULL);
 }
 
+void comp_zap_page_range(struct vm_area_struct *vma, unsigned long address, unsigned long size);
+
 /**
  * binder_alloc_free_page() - shrinker callback to free pages
  * @item:   item to free
@@ -944,7 +946,7 @@ enum lru_status binder_alloc_free_page(struct list_head *item,
 	if (vma) {
 		trace_binder_unmap_user_start(alloc, index);
 
-		zap_page_range(vma, page_addr, PAGE_SIZE);
+		comp_zap_page_range(vma, page_addr, PAGE_SIZE);
 
 		trace_binder_unmap_user_end(alloc, index);
 	}
